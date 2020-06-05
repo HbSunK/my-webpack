@@ -9,3 +9,7 @@ let fn = require('./b')
 console.log('111')
 console.log(cl)
 console.log(fn)
+
+exports.module = {
+    fn
+}

@@ -38,3 +38,13 @@ console.log(b)
 let img = new Image();
 img.src = imgSrc
 document.body.appendChild(img)
+
+
+
+let xhr = new XMLHttpRequest();
+xhr.open('GET', '/api/user', true)
+
+xhr.onload = function () {
+    console.log(xhr.response);
+}
+xhr.send('request data')
