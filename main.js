@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-06-05 09:28:06
  * @LastEditors: sk
- * @LastEditTime: 2020-06-05 18:34:15
+ * @LastEditTime: 2020-06-05 22:00:24
  */ 
 
 // css 文件可以通过 import和require的方式引入
@@ -13,6 +13,7 @@ import imgSrc from './public/img.jpg'
 // 引入js兼容文件
 require('@babel/polyfill')
 
+// 测试es6
 const fn = () => {
     console.log('=>')
 }
