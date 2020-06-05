@@ -60,7 +60,7 @@ module.exports = {
         //     '/api': 'http://localhost:3001'
         // },
 
-        // 本地mock数据，部分开发情况时会启用，可结合mockjs使用
+        // 本地mock数据，部分开发情况时会启用，可结合mockjs使用，提升开发效率
         before(app) {
             app.get('/api/user', (req, res) => {
                 res.json({
