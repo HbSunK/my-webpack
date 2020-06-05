@@ -1,0 +1,11 @@
+{
+    "root": true,
+    "parserOptions": {
+        "sourceType": "module"
+    },
+    // add your custom rules here
+    "rules": {
+        // allow debugger during development
+        "no-debugger": 0
+    }
+}

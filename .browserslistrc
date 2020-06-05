@@ -1,0 +1,8 @@
+# css的浏览器兼容
+
+defaults
+not ie <= 8
+last 2 versions
+> 1%
+iOS >= 7
+Android >= 4.0
