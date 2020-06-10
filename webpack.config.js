@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-06-05 09:28:58
  * @LastEditors: sk
- * @LastEditTime: 2020-06-05 20:04:03
+ * @LastEditTime: 2020-06-08 16:05:53
  */ 
 let webpack = require('webpack')
 let path = require('path')
@@ -13,7 +13,7 @@ let HtmlWebpackPlugin = require('html-webpack-plugin')
 let miniCssExtractPlugin = require('mini-css-extract-plugin')
 
 // 处理css文件压缩，如果单独使用了压缩css的插件，会导致js文件压缩失败，需要在此结合使用
-const UglifyjsWbpackPlugin = require('uglifyjs-webpack-plugin');    // 压缩js
+const TerserWebpackPlugin = require('terser-webpack-plugin');    // 压缩js
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');  // 压缩css
 
 // 删除文件，需要注意引入方式较为特殊
@@ -21,6 +21,9 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 // 复制文件
 const CopyWebpackPlugin = require('copy-webpack-plugin')
+
+// webpack打包分析工具，可视化性能指标展示，用于性能优化
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 // webpack打包的整体配置
 module.exports = {
@@ -38,7 +41,10 @@ module.exports = {
         filename: '[name].[hash:8].js',
         path: path.resolve(__dirname, 'dist'),
         publicPath: './',               // 页面资源引用的路径或者 CDN 地址
-        chunkFilename: '[name].js'      // 代码拆分后的文件名
+        chunkFilename: '[name].js',     // 代码拆分后的文件名
+
+        // 配置这个异步插入的标签的 crossorigin 值
+        crossOriginLoading: 'anonymous'
     },
 
     // 开启源码映射，便于线上调试、定位问题
@@ -62,6 +68,8 @@ module.exports = {
 
         // 本地mock数据，部分开发情况时会启用，可结合mockjs使用，提升开发效率
         before(app) {
+
+            //app代表node中的express的中间层
             app.get('/api/user', (req, res) => {
                 res.json({
                     name: 'sk-mock'
@@ -69,6 +77,28 @@ module.exports = {
             })
         }
     },  
+
+    // 解析第三方依赖
+    resolve: {
+        modules: [
+            path.resolve('node_modules'),   // 当前配置的是只解析node_modules下的依赖，可向数组中追加
+        ],
+
+        // 自动查找文件后缀，否则如果 import 这种方式引入的而文件默认都是找js、css文件
+        // 指定后缀之后，会按照数组的顺序依次查找，减少写后缀的过程
+        extensions: ['.js', '.css'],
+
+        // 设置优先查找每个插件的主入口，提升查找效率，默认为main文件
+        mainFields: ['main'],
+
+        // 规定主入口文件的名字，默认为index.js
+        mainFiles: ['index.js'],
+
+        // 别名，用较短的标识去表示路径，写起来更便捷
+        alias: {
+            '@': './src'
+        }
+    },
 
     // 实时编译，修改代码后自动打包
     // watch: true,
@@ -139,6 +169,44 @@ module.exports = {
 
     // 使用插件
     plugins: [
+
+        // webpack打包分析工具，可视化性能指标展示，用于性能优化
+        // new BundleAnalyzerPlugin({
+        //     //  可以是`server`，`static`或`disabled`。
+        //     //  在`server`模式下，分析器将启动HTTP服务器来显示软件包报告。
+        //     //  在“静态”模式下，会生成带有报告的单个HTML文件。
+        //     //  在`disabled`模式下，你可以使用这个插件来将`generateStatsFile`设置为`true`来生成Webpack Stats JSON文件。
+        //     analyzerMode: 'server',
+        //     //  将在“服务器”模式下使用的主机启动HTTP服务器。
+        //     analyzerHost: '127.0.0.1',
+        //     //  将在“服务器”模式下使用的端口启动HTTP服务器。
+        //     analyzerPort: 8002,
+        //     //  路径捆绑，将在`static`模式下生成的报告文件。
+        //     //  相对于捆绑输出目录。
+        //     reportFilename: 'report.html',
+        //     //  模块大小默认显示在报告中。
+        //     //  应该是`stat`，`parsed`或者`gzip`中的一个。
+        //     //  有关更多信息，请参见“定义”一节。
+        //     defaultSizes: 'parsed',
+        //     //  在默认浏览器中自动打开报告
+        //     openAnalyzer: true,
+        //     //  如果为true，则Webpack Stats JSON文件将在bundle输出目录中生成
+        //     generateStatsFile: false,
+        //     //  如果`generateStatsFile`为`true`，将会生成Webpack Stats JSON文件的名字。
+        //     //  相对于捆绑输出目录。
+        //     statsFilename: 'stats.json',
+        //     //  stats.toJson（）方法的选项。
+        //     //  例如，您可以使用`source：false`选项排除统计文件中模块的来源。
+        //     //  在这里查看更多选项：https：  //github.com/webpack/webpack/blob/webpack-1/lib/Stats.js#L21
+        //     statsOptions: null,
+        //     logLevel: 'info' // 日志级别。可以是'信息'，'警告'，'错误'或'沉默'。
+        // }),
+
+        // 自定定义环境变量，可以在所有模块中使用
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': "'dev'"
+        }),
+
         // 使用html模板生成
         new HtmlWebpackPlugin({
             template: './public/index.html',    // 使用的模板路径
@@ -148,6 +216,11 @@ module.exports = {
             // 需要引入的代码块，如果不写此配置，就会把多入口的依赖都引入html中
             // 此处的配置，只会从entry中找到 main 入口的所有依赖，引入到页面中
             chunks: ['main'],
+
+            // 处理 html 注入 js 添加跨域标识
+            attributes: {
+                crossorigin: 'anonymous'
+            },
 
             // 其他配置
             minify: {
@@ -163,7 +236,10 @@ module.exports = {
             template: './public/index.html',    // 使用的模板路径
             filename: 'main.html',              // 对生成的模板重新命名
             title: '自动生成 HTML',
-            chunks: ['main2'],             
+            chunks: ['main2'],  
+            attributes: {
+                crossorigin: 'anonymous'
+            },           
             minify: {
                 // 压缩 HTML 文件
                 removeComments: true,           // 移除 HTML 中的注释
@@ -171,10 +247,12 @@ module.exports = {
                 minifyCSS: true                 // 压缩内联 css
             },
         }),
-
+        // TODO: 添加js 标签中的 crossorigin 属性
+        
         // 抽离css，此插件会将所有css变成一个css文件，由link标签引入
         new miniCssExtractPlugin({
-            filename: 'css/main.[hash:8].css'   // 可以在此加输出的目录路径、hash
+            filename: 'css/[name].[hash:8].css',// 可以在此加输出的目录路径、hash
+            chunkFilename: '[id].css'
         }),
 
         // 复制文件
@@ -191,7 +269,7 @@ module.exports = {
     optimization: {
         minimizer: [
             new CleanWebpackPlugin(), // 先清空目录
-            new UglifyjsWbpackPlugin({
+            new TerserWebpackPlugin({
                 cache: true,        // 是否使用缓存，如果文件没有修改，则不会打包未修改的文件
                 parallel: true,     // 是否并发打包
                 sourceMap: true     // 开启源码映射，用于线上调试

@@ -5,8 +5,9 @@
   "main": "main.js",
   "scripts": {
     "build": "webpack --config webpack.config.js",
-    "dev": "webpack-dev-server",
-    "dev:debbug": "webpack-dev-server --devtool eval-source-map --progress --colors"
+    "dev": "set NODE_ENV=production && webpack-dev-server",
+    "dev:debbug": "webpack-dev-server --devtool eval-source-map --progress --colors",
+    "analyz": "cross-env NODE_ENV=production npm_config_report=true npm run build"
   },
   "dependencies": {
     "@babel/polyfill": "^7.10.1",
@@ -21,6 +22,7 @@
     "babel-preset-env": "^1.7.0",
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "^6.0.2",
+    "cross-env": "^7.0.2",
     "css-loader": "^3.5.3",
     "eslint": "^7.1.0",
     "eslint-loader": "^4.0.2",
@@ -38,6 +40,7 @@
     "uglifyjs-webpack-plugin": "^2.2.0",
     "url-loader": "^4.1.0",
     "webpack": "^4.43.0",
+    "webpack-bundle-analyzer": "^3.8.0",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.11.0"
   },
