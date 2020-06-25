@@ -3,6 +3,7 @@
 .DS_Store
 node_modules/
 /dist/
+/static/
 npm-debug.log*
 
 # Editor directories and files

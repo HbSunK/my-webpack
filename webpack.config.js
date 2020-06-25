@@ -22,8 +22,11 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 // 复制文件
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
+// 多线程打包
+const Happypack = require('happypack')
+
 // webpack打包分析工具，可视化性能指标展示，用于性能优化
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 // webpack打包的整体配置
 module.exports = {
@@ -40,11 +43,10 @@ module.exports = {
     output: {
         filename: '[name].[hash:8].js',
         path: path.resolve(__dirname, 'dist'),
-        publicPath: './',               // 页面资源引用的路径或者 CDN 地址
-        chunkFilename: '[name].js',     // 代码拆分后的文件名
-
-        // 配置这个异步插入的标签的 crossorigin 值
-        crossOriginLoading: 'anonymous'
+        publicPath: './',                   // 页面资源引用的路径或者 CDN 地址
+        chunkFilename: '[name].js',         // 代码拆分后的文件名
+        crossOriginLoading: 'anonymous',    // 配置这个异步插入的标签的 crossorigin 值
+        library: 'outputName'               // 对打包后的文件赋予全局变量，之前打包后的文件是一个闭包，现在会把这个闭包的返回值付给定义的全局变量，在此是outputName
     },
 
     // 开启源码映射，便于线上调试、定位问题
@@ -109,7 +111,10 @@ module.exports = {
     // },
 
     // 使用loader
-    module: {                   
+    module: {    
+        // 不去解析某些依赖，此处例子为：遇到jquery时不分析其依赖，提升打包速度
+        noParse: /jquery/,
+
         rules: [{                   
             test: /.(scss|sass|css)$/,
             use: [                  // rules数组中的loader都是按照都是从下到上、从左到右执行这个顺序执行的
@@ -135,7 +140,7 @@ module.exports = {
             ]
         }, {
             test: /.js$/,
-            exclude: /node_modules/,            // 忽略依赖插件目录的识别
+            exclude: /node_modules/,            // 忽略依赖插件目录的识别，提升打包速度，不分析该文件夹下的依赖
             use: [{                     
                 loader: 'babel-loader',         // es6转es5
 
@@ -202,6 +207,12 @@ module.exports = {
         //     logLevel: 'info' // 日志级别。可以是'信息'，'警告'，'错误'或'沉默'。
         // }),
 
+        // 添加动态链接库，提升打包速度
+        // 用法是：先打包第三方依赖，这些依赖很少改动，所以不需要每次改动都要参与打包，将第三方依赖标识出来，如果第三方包已经打包过一次，就直接引入打包好的文件
+        new webpack.DllReferencePlugin({
+            manifest: require('./dist/vendor-manifest.json')
+        }),
+
         // 自定定义环境变量，可以在所有模块中使用
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': "'dev'"
@@ -255,10 +266,16 @@ module.exports = {
             chunkFilename: '[id].css'
         }),
 
+        // 打印热更新的模块路径
+        new webpack.NamedModulesPlugin(),
+
+        // 热更新插件，需要单独配置才能实现不刷新页面 只刷新局部的效果
+        new webpack.HotModuleReplacementPlugin(),
+
         // 复制文件
         new CopyWebpackPlugin({
             patterns: [{
-                from: './doc',
+                from: './static',
                 to: './'
             }]
         })
@@ -275,6 +292,21 @@ module.exports = {
                 sourceMap: true     // 开启源码映射，用于线上调试
             }), 
             new OptimizeCSSAssetsPlugin({})
-        ]
+        ],
+
+        // 代码分割，提出公共部分代码
+        splitChunks: {
+            vendor: {                   // 对引入的第三方依赖包进行优化，多次引入的情况就单独打包出来
+                test: /node_modules/,
+                priority: 10            // 添加权重，值越大越优先执行
+            },
+            cacheGroups: {              // 缓存组
+                comm: {                 // 此处的comm为 抽离公共代码后的文件名
+                    minSize: 0,         // 文件超过0kb就会被打包
+                    chunks: 'initial',
+                    minChunks: 2        // 文件的引入大于等于2次就会被打包
+                }
+            }
+        }
     }
 }

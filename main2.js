@@ -15,22 +15,14 @@ const fn = () => {
 }
 fn()
 
-new Promise(resolve => {
-    setTimeout(() => {
-        console.log(resolve('resolve is run'));
-    }, 1000)
-})
-
-class A {
-    constructor (str) {
-        this.a = 1
-    }
-}
-
-let b = new A('class')
-
-console.log(1, 2, b)
   
 let img = new Image();
 img.src = imgSrc
 document.body.appendChild(img)
+
+import vue from 'vue'
+import router from 'vue-router'
+const myrouter = new router()
+vue.use(myrouter)
+console.log(vue)
+

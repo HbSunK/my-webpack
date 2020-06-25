@@ -50,3 +50,4 @@ xhr.onload = function () {
     console.log(xhr.response);
 }
 xhr.send('request data')
+
