@@ -110,6 +110,14 @@ module.exports = {
     //     ignored: /node_modules/ // 忽略对改文件夹内容的监控
     // },
 
+    // 自定义loader的使用路径，在此例子中的含义是，先从node_modules中查找，如果node_modules未找到就从loader文件夹中查找
+    resolveLoader: {
+        modules: [
+            'node_modules',
+            path.resolve(__dirname, 'loaders')
+        ]
+    },
+
     // 使用loader
     module: {    
         // 不去解析某些依赖，此处例子为：遇到jquery时不分析其依赖，提升打包速度
@@ -136,7 +144,15 @@ module.exports = {
                         plugins: [require('autoprefixer')]
                     }
                 },
-                'sass-loader'                   // 将sass转成css           
+                'sass-loader',                  // 将sass转成css
+
+                // 引入自定义loader
+                {
+                    loader: 'custom-loader',
+                    options: {
+                        aaa: [123, 345]
+                    }
+                }
             ]
         }, {
             test: /.js$/,
@@ -296,10 +312,10 @@ module.exports = {
 
         // 代码分割，提出公共部分代码
         splitChunks: {
-            vendor: {                   // 对引入的第三方依赖包进行优化，多次引入的情况就单独打包出来
-                test: /node_modules/,
-                priority: 10            // 添加权重，值越大越优先执行
-            },
+            // vendor: {                   // 对引入的第三方依赖包进行优化，多次引入的情况就单独打包出来
+            //     test: /node_modules/,
+            //     priority: 10            // 添加权重，值越大越优先执行
+            // },
             cacheGroups: {              // 缓存组
                 comm: {                 // 此处的comm为 抽离公共代码后的文件名
                     minSize: 0,         // 文件超过0kb就会被打包
