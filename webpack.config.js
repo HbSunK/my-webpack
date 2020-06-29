@@ -25,6 +25,9 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 // 多线程打包
 const Happypack = require('happypack')
 
+// 使用自己定义的插件，用于测试
+const CustomPlugin = require('./plugins/custom-plugin')
+
 // webpack打包分析工具，可视化性能指标展示，用于性能优化
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
@@ -226,7 +229,7 @@ module.exports = {
         // 添加动态链接库，提升打包速度
         // 用法是：先打包第三方依赖，这些依赖很少改动，所以不需要每次改动都要参与打包，将第三方依赖标识出来，如果第三方包已经打包过一次，就直接引入打包好的文件
         new webpack.DllReferencePlugin({
-            manifest: require('./dist/vendor-manifest.json')
+            manifest: require('./static/vendor-manifest.json')
         }),
 
         // 自定定义环境变量，可以在所有模块中使用
@@ -246,7 +249,8 @@ module.exports = {
 
             // 处理 html 注入 js 添加跨域标识
             attributes: {
-                crossorigin: 'anonymous'
+                crossorigin: 'anonymous',
+                customdata: 1
             },
 
             // 其他配置
@@ -265,7 +269,8 @@ module.exports = {
             title: '自动生成 HTML',
             chunks: ['main2'],  
             attributes: {
-                crossorigin: 'anonymous'
+                crossorigin: 'anonymous',
+                customdata: 2
             },           
             minify: {
                 // 压缩 HTML 文件
@@ -276,6 +281,10 @@ module.exports = {
         }),
         // TODO: 添加js 标签中的 crossorigin 属性
         
+        new CustomPlugin({
+            data: 'test'
+        }),
+
         // 抽离css，此插件会将所有css变成一个css文件，由link标签引入
         new miniCssExtractPlugin({
             filename: 'css/[name].[hash:8].css',// 可以在此加输出的目录路径、hash
