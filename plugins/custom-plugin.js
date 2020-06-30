@@ -15,6 +15,7 @@ class CustomPlugin {
     apply (compile) {
         console.log('======= custom-plugin-start ======')
         
+        // 此办法，可以对html中所有script标签进行操作
         compile.hooks.compilation.tap('script-tag-add-attributes', (compilation) => {
             HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync('script-tag-add-attributes', (data, cb) => {
                 data.html = data.html.replace(
@@ -24,6 +25,16 @@ class CustomPlugin {
                 cb(null, data)
             })
         })
+
+        // 这种办法只能操作webpack打包的标签，不能对html模板中已有的script标签进行操作
+        // compile.hooks.compilation.tap('script-tag-add-attributes', (compilation) => {
+        //     HtmlWebpackPlugin.getHooks(compilation).alterAssetTagGroups.tapAsync('script-tag-add-attributes', (data, cb) => {
+        //         data.bodyTags.forEach(options => {
+        //             Object.assign(options.attributes, data.plugin.options.attributes)
+        //         })
+        //         cb(null, data)
+        //     })
+        // })
 
         // 通过 tapAsync 注册异步钩子
         // 通过 tap 注册同步钩子
