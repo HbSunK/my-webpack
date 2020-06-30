@@ -7,7 +7,9 @@ class CustomPlugin {
     }
 
     jsonToKeyValue (obj) {
-        return obj ? Object.keys(obj).map(key => `${key}="${obj[key]}"`).join(' ') : ''
+        if (obj === null || typeof obj !== 'object') return ''
+
+        return Object.keys(obj).reduce((result, key) => `${result}${key}="${obj[key]}" `, '')        
     }
 
     apply (compile) {
@@ -17,7 +19,7 @@ class CustomPlugin {
             HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync('script-tag-add-attributes', (data, cb) => {
                 data.html = data.html.replace(
                     this.customAttrReg, 
-                    `<script ${this.jsonToKeyValue(data.plugin.options.attributes)} `
+                    `<script ${this.jsonToKeyValue(data.plugin.options.attributes)}`
                 )
                 cb(null, data)
             })
